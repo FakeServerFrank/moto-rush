@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1026">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Moto Rush</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b1026;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;touch-action:none}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+input{font:inherit;color:#fff;width:100%;padding:13px 14px;margin-bottom:10px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);outline:none;user-select:text;-webkit-user-select:text}
+input:focus{border-color:#ff9f1c}
+input::placeholder{color:rgba(255,255,255,.5)}
+
+.screen{position:fixed;inset:0;display:none;flex-direction:column;gap:10px;padding:max(14px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));pointer-events:none;overflow:hidden}
+.screen.active{display:flex}
+.screen>*{pointer-events:auto}
+.screen.center{justify-content:center;align-items:center}
+.panel{background:rgba(9,13,34,.74);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px}
+.spacer{flex:1;pointer-events:none!important}
+
+.logo{font-size:44px;font-weight:900;font-style:italic;letter-spacing:1px;text-shadow:0 4px 0 rgba(0,0,0,.35)}
+.logo span{color:#ff9f1c;margin-left:6px}
+.tagline{opacity:.85;margin:2px 0 16px;font-size:15px}
+.authbox{width:100%;max-width:380px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.07);font-weight:600;opacity:.7}
+.tab.on{background:#ff9f1c;color:#1a1020;opacity:1}
+.err{color:#ff6b6b;min-height:20px;font-size:14px;margin-bottom:8px}
+.badge{margin-top:10px;font-size:12px;opacity:.7;text-align:center}
+
+.btn{padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.12);font-weight:700;font-size:16px;border:1px solid rgba(255,255,255,.12)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg,#ffb13b,#ff7a00);color:#2b1300;border:0;box-shadow:0 5px 0 #b34f00}
+.btn.gold{background:linear-gradient(180deg,#ffe066,#f2b705);color:#3a2a00;border:0}
+.btn.huge{padding:18px;font-size:26px;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.btn.huge small{font-size:13px;font-weight:600;opacity:.8;margin-top:4px}
+.btn.disabled{opacity:.45}
+.link{background:none;opacity:.6;font-size:14px;padding:8px}
+
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.name{font-size:20px;font-weight:800}
+.sub{opacity:.9;font-size:14px;margin-top:2px}
+.rankchip{background:#ff9f1c;color:#2b1300;font-weight:800;border-radius:8px;padding:2px 8px;margin-right:6px;font-size:13px}
+.coins{font-size:18px}
+.xpwrap{padding:0 4px}
+.xpbar{height:12px;border-radius:8px;background:rgba(255,255,255,.18);overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3ddc97,#2ec4b6);transition:width .5s}
+.xptxt{font-size:12px;opacity:.8;margin-top:3px;text-align:right}
+.lobbybtns{display:flex;flex-direction:column;gap:10px}
+.row2{display:flex;gap:10px}.row2 .btn{flex:1}
+
+.head{display:flex;align-items:center;gap:10px}
+.head h2{margin:0;font-size:18px;flex:1}
+.back{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.12);font-size:20px}
+.note{font-size:12px;opacity:.75;padding:0 6px}
+.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;touch-action:pan-y}
+.scroll{touch-action:pan-y}
+.rrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06)}
+.rrow.me{background:rgba(255,159,28,.25);border:1px solid #ff9f1c}
+.pos{width:30px;font-weight:900;font-size:18px;text-align:center}
+.rn{flex:1;min-width:0}.rn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rn small{opacity:.75}
+.rxp{font-weight:800;color:#ffd166}
+
+.bcard{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:rgba(9,13,34,.74);border:1px solid rgba(255,255,255,.1)}
+.bcard.sel{border-color:#3ddc97}
+.bcard canvas{width:110px;height:64px;background:rgba(255,255,255,.08);border-radius:12px;flex:none}
+.binfo{flex:1;min-width:0}.binfo b{font-size:16px}.binfo small{display:block;opacity:.8;margin-top:2px}
+.bcard .btn{padding:10px 12px;font-size:14px}
+
+/* HUD */
+#hud{position:fixed;left:0;right:0;top:0;padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none}
+.hudtop{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.pill{background:rgba(9,13,34,.65);border-radius:12px;padding:7px 12px;font-weight:700;font-size:15px}
+.pill.big{font-size:24px;min-width:64px;text-align:center}
+.pill.warn{color:#ff6b6b}
+.pausebtn{pointer-events:auto}
+.prog{height:8px;border-radius:6px;background:rgba(255,255,255,.2);margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff7a00)}
+#hudMsg{text-align:center;font-size:56px;font-weight:900;font-style:italic;margin-top:12vh;text-shadow:0 4px 0 rgba(0,0,0,.4);opacity:0;transition:opacity .2s}
+#hudMsg.on{opacity:1}
+#controls{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 14px max(16px,env(safe-area-inset-bottom));pointer-events:none}
+#controls .cl{display:flex;gap:10px}
+.cbtn{pointer-events:auto;touch-action:none;width:84px;height:84px;border-radius:24px;background:rgba(9,13,34,.6);border:2px solid rgba(255,255,255,.35);font-size:34px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cbtn small{font-size:10px;font-weight:700;opacity:.8;margin-top:3px}
+.cbtn.jump{width:104px;height:104px;border-radius:50%;background:rgba(255,122,0,.75);border-color:#ffd166}
+.cbtn.down{background:rgba(255,255,255,.35);transform:scale(.94)}
+.cbtn.jump.down{background:#ff7a00}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+#modal.on{display:flex}
+.box{width:100%;max-width:380px;text-align:center;max-height:92vh;overflow:auto}
+.box h3{margin:0 0 8px;font-size:24px}
+.box .rw{display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.1)}
+.box p{margin:8px 0;opacity:.9}
+.box .hl{color:#ffd166;font-weight:800}
+#modalBtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* pantalla horizontal: botones del lobby a la derecha para ver la moto */
+@media (orientation:landscape) and (max-height:520px){
+  #scrLobby .lobbybtns{position:absolute;right:16px;bottom:max(16px,env(safe-area-inset-bottom));width:min(46%,380px);gap:8px}
+  #scrLobby .btn{padding:11px 14px}
+  #scrLobby .btn.huge{padding:12px;font-size:22px}
+  #scrLobby .topbar{max-width:55%}
+  #scrLobby .xpwrap{max-width:55%}
+  .logo{font-size:34px}.tagline{margin-bottom:8px}
+  .authbox{max-width:420px}
+  input{padding:9px 12px;margin-bottom:6px}
+}
+
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<!-- INICIO / LOGIN -->
+<section id="scrAuth" class="screen center">
+  <div class="logo">MOTO<span>RUSH</span></div>
+  <div class="tagline">Salta. Esquiva. Sube de rango.</div>
+  <div class="panel authbox">
+    <div class="tabs">
+      <button id="tabLogin" class="tab on">Entrar</button>
+      <button id="tabSignup" class="tab">Crear cuenta</button>
+    </div>
+    <input id="inUser" placeholder="Nombre de piloto (3-16, letras/números/_)" autocomplete="username" maxlength="16" class="hidden">
+    <input id="inEmail" type="email" placeholder="Correo" autocomplete="email">
+    <input id="inPass" type="password" placeholder="Contraseña (mín. 6)" autocomplete="current-password">
+    <div id="authErr" class="err"></div>
+    <button id="btnAuth" class="btn primary">Entrar</button>
+    <div id="modeBadge" class="badge"></div>
+  </div>
+</section>
+
+<!-- LOBBY -->
+<section id="scrLobby" class="screen">
+  <div class="panel topbar">
+    <div class="who">
+      <div id="lbName" class="name">Piloto</div>
+      <div class="sub"><span id="lbRank" class="rankchip">Novato</span> <span id="lbLevel">Nv 1</span></div>
+    </div>
+    <div class="coins">🪙 <b id="lbCoins">0</b></div>
+  </div>
+  <div class="xpwrap"><div class="xpbar"><i id="lbXp"></i></div><div id="lbXpTxt" class="xptxt"></div></div>
+  <div class="spacer"></div>
+  <div class="lobbybtns">
+    <button id="btnPlay" class="btn primary huge"><span>JUGAR</span><small id="btnPlayInfo">Pista 1</small></button>
+    <div class="row2">
+      <button id="btnGarage" class="btn">🏍️ Garaje</button>
+      <button id="btnRank" class="btn">🏆 Ranking</button>
+    </div>
+    <button id="btnDaily" class="btn gold hidden">🎁 Recompensa diaria</button>
+    <button id="btnLogout" class="link">Cerrar sesión</button>
+  </div>
+</section>
+
+<!-- RANKING -->
+<section id="scrRank" class="screen">
+  <div class="panel head"><button class="back" data-back>←</button><h2>Tabla de clasificación</h2></div>
+  <div id="rankNote" class="note"></div>
+  <div id="rankList" class="panel list"></div>
+</section>
+
+<!-- GARAJE -->
+<section id="scrGarage" class="screen">
+  <div class="panel head"><button class="back" data-back>←</button><h2>Garaje</h2><div class="coins">🪙 <b id="gaCoins">0</b></div></div>
+  <div id="garageList" class="list scroll"></div>
+</section>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hudtop">
+    <div class="pill" id="hudStage">Pista 1</div>
+    <div class="pill big" id="hudTime">30</div>
+    <div class="pill" id="hudCoins">🪙 0</div>
+    <button id="btnPause" class="pill pausebtn">II</button>
+  </div>
+  <div class="prog"><i id="hudProg"></i></div>
+  <div id="hudMsg"></div>
+</div>
+<div id="controls" class="hidden">
+  <div class="cl">
+    <button id="bBack" class="cbtn">↺<small>freno / atrás</small></button>
+    <button id="bFwd" class="cbtn">↻<small>adelante</small></button>
+  </div>
+  <button id="bJump" class="cbtn jump">⤒<small>SALTAR</small></button>
+</div>
+
+<!-- MODAL / TOAST -->
+<div id="modal"><div class="panel box"><div id="modalBody"></div><div id="modalBtns"></div></div></div>
+<div id="toast"></div>
+
+<script>window.MOTO_CONFIG = { SUPABASE_URL: 'https://ikucvatxavwxnewzyayv.supabase.co', SUPABASE_KEY: 'sb_publishable_fUAh5ZVML-iy6gAAutD84Q_bd0or7XG' }; // <-- pega aquí tus datos de Supabase (ver README)</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// MOTO RUSH - motor del juego (sin DOM, se puede probar en Node)
+(function (root) {
+  'use strict';
+  const G = 1000, JUMP_V = 360, TWO_PI = Math.PI * 2, DT = 1 / 120;
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function wrap(a) {
+    while (a > Math.PI) a -= TWO_PI;
+    while (a < -Math.PI) a += TWO_PI;
+    return a;
+  }
+
+  // Dificultad por pista: cada nivel es más largo, más rápido y con más trampas
+  function levelParams(n) {
+    const d = n - 1;
+    return {
+      n, d,
+      length: Math.min(5000 + 1400 * d, 40000),
+      maxSpeed: Math.min(380 + 16 * d, 700),
+      gapWidth: Math.min(70 + 8 * d, 280),
+      rockP: Math.min(0.35 + 0.04 * d, 0.85),
+      jumpP: Math.min(0.28 + 0.03 * d, 0.55),
+      hillP: 0.18,
+      rampAngle: 0.30 + Math.min(d * 0.004, 0.08)
+    };
+  }
+
+  function buildTrack(n) {
+    const P = levelParams(n), d = P.d;
+    const rnd = mulberry32(n * 7919 + 13);
+    const pts = [{ x: -800, y: 0 }, { x: 900, y: 0 }];
+    const rocks = [], coins = [];
+    let x = 900, lastRock = -1e9;
+    const spacing = P.maxSpeed * 0.9 + 150; // más veloz = más separación entre obstáculos
+    const push = (nx, ny) => { pts.push({ x: nx, y: ny }); x = nx; };
+
+    while (x < P.length) {
+      const r = rnd();
+      if (r < P.jumpP) {
+        // rampa + abismo
+        const ang = P.rampAngle + rnd() * 0.08;
+        const rl = 150 + rnd() * 60;
+        const rise = rl * Math.tan(ang);
+        push(x + rl, -rise);
+        const topX = x;
+        const pw = P.gapWidth * (0.7 + rnd() * 0.3);
+        push(topX + 6, 420);
+        push(topX + pw - 6, 420);
+        push(topX + pw, -rise * 0.45);
+        push(topX + pw + 170 + rnd() * 50, 0);
+        push(x + 0.55 * P.maxSpeed, 0); // tramo de recuperación tras el salto
+        for (let k = 0; k < 5; k++) {
+          const t = (k + 0.5) / 5;
+          coins.push({ x: topX + 20 + (pw + 40) * t, y: -rise - 30 - 50 * Math.sin(Math.PI * t) });
+        }
+      } else if (r < P.jumpP + P.hillP) {
+        // loma suave
+        const len = 450 + rnd() * 300, h = 40 + rnd() * (50 + d * 4), s0 = x;
+        const cnt = Math.ceil(len / 24);
+        for (let i = 1; i <= cnt; i++) push(s0 + (len * i) / cnt, i === cnt ? 0 : -h * Math.sin((Math.PI * i) / cnt));
+        for (let k = 0; k < 3; k++) coins.push({ x: s0 + len * (0.3 + 0.2 * k), y: -h * Math.sin(Math.PI * (0.3 + 0.2 * k)) - 45 });
+      } else {
+        // tramo plano con obstáculos
+        const off = 1.15 * P.maxSpeed + 100, tail = 0.7 * P.maxSpeed + 100;
+        const len = off + tail + 100 + rnd() * 350, s0 = x;
+        push(s0 + len, 0);
+        let rx = s0 + off;
+        while (rx < s0 + len - tail) {
+          if (rnd() < P.rockP && rx - lastRock >= spacing) {
+            const log = d >= 4 && rnd() < 0.3;
+            rocks.push(log
+              ? { x: rx, w: 100, h: 24, type: 'log' }
+              : { x: rx, w: 34 + rnd() * 14, h: 24 + rnd() * 10 + Math.min(d * 1.2, 16), type: 'rock' });
+            lastRock = rx; rx += spacing;
+          } else rx += 110;
+        }
+        if (rnd() < 0.5) for (let k = 0; k < 4; k++) coins.push({ x: s0 + len * 0.3 + k * 45, y: -45 });
+      }
+    }
+    const endX = x + 800;
+    push(endX, 0);
+    const finishX = endX - 350;
+
+    function groundY(px) {
+      const last = pts.length - 1;
+      if (px <= pts[0].x) return pts[0].y;
+      if (px >= pts[last].x) return pts[last].y;
+      let lo = 0, hi = last;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m].x <= px) lo = m; else hi = m; }
+      const a = pts[lo], b = pts[hi];
+      return a.y + ((b.y - a.y) * (px - a.x)) / (b.x - a.x);
+    }
+    function slope(px) {
+      const last = pts.length - 1;
+      if (px <= pts[0].x || px >= pts[last].x) return 0;
+      let lo = 0, hi = last;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m].x <= px) lo = m; else hi = m; }
+      return (pts[hi].y - pts[lo].y) / (pts[hi].x - pts[lo].x);
+    }
+    const time = Math.round(finishX / (0.78 * P.maxSpeed) + 8);
+    return { n, params: P, pts, rocks, coins, finishX, time, groundY, slope };
+  }
+
+  class Bike {
+    constructor(track, stats) {
+      this.T = track;
+      this.stats = stats || { speed: 1, control: 1 };
+      this.x = 120; this.y = 0; this.vx = 140; this.vy = 0; this.ang = 0;
+      this.onGround = true; this.state = 'ready'; this.cause = '';
+      this.t = 0; this.coins = 0; this.flips = 0; this.airRot = 0;
+      this.jumpLock = false; this.wheel = 0;
+    }
+    crash(c) { this.state = 'crashed'; this.cause = c; }
+    step(dt, inp) {
+      if (this.state !== 'run') return;
+      const T = this.T, st = this.stats, maxV = T.params.maxSpeed * st.speed;
+      this.t += dt;
+      if (this.t > T.time) return this.crash('tiempo');
+      if (!inp.jump) this.jumpLock = false;
+
+      if (this.onGround) {
+        const s = T.slope(this.x);
+        let ax = 560 * st.speed + s * G * 0.45;
+        if (inp.back) ax -= 700; // freno
+        this.vx += ax * dt;
+        if (this.vx > maxV) this.vx = Math.max(maxV, this.vx - (this.vx - maxV) * Math.min(1, 8 * dt));
+        if (this.vx < 70) this.vx = 70;
+        if (inp.jump && !this.jumpLock) {
+          this.jumpLock = true; this.onGround = false; this.vy = -JUMP_V; this.airRot = 0;
+        } else {
+          const nx = this.x + this.vx * dt, ny = T.groundY(nx);
+          const expY = this.y + this.vy * dt + 0.5 * G * dt * dt;
+          const ns = T.slope(nx);
+          if (ny > expY + 1 || ns > 1.6) {
+            this.onGround = false; this.vy = s * this.vx; this.airRot = 0; // despegue
+          } else {
+            this.x = nx; this.y = ny;
+            this.vy = ns * this.vx;
+            if (ns < -1.6) return this.crash('pared');
+            this.ang += (Math.atan(ns) - this.ang) * Math.min(1, 14 * dt);
+          }
+        }
+      }
+
+      if (!this.onGround) {
+        const rot = 4.2 * st.control * dt;
+        let dr = 0;
+        if (inp.back) dr -= rot;
+        if (inp.fwd) dr += rot;
+        this.ang += dr; this.airRot += dr;
+        this.vy += G * dt; this.x += this.vx * dt; this.y += this.vy * dt;
+        const gy = T.groundY(this.x);
+        if (this.y >= gy) {
+          const ns = T.slope(this.x), target = Math.atan(ns), diff = wrap(this.ang - target);
+          if (Math.abs(ns) > 1.6 || Math.abs(diff) > 0.95) return this.crash('aterrizaje');
+          if (Math.abs(this.airRot) > TWO_PI * 0.8) this.flips += Math.round(Math.abs(this.airRot) / TWO_PI);
+          const impact = this.vy;
+          this.onGround = true; this.y = gy; this.ang = target + diff * 0.35;
+          this.vy = ns * this.vx;
+          if (impact > 520) this.vx *= 0.94;
+        }
+        if (this.y > 150) return this.crash('abismo');
+      }
+
+      this.wheel += (this.vx * dt) / 13;
+      for (const r of T.rocks) {
+        if (Math.abs(this.x - r.x) < r.w / 2 + 14 && this.y > T.groundY(r.x) - r.h + 6) return this.crash('roca');
+      }
+      for (const c of T.coins) {
+        if (!c.taken && Math.abs(this.x - c.x) < 32 && Math.abs(this.y - 25 - c.y) < 40) { c.taken = true; this.coins++; }
+      }
+      if (this.x >= T.finishX) this.state = 'won';
+    }
+  }
+
+  const api = { G, DT, levelParams, buildTrack, Bike, wrap };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.MotoSim = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+// MOTO RUSH - interfaz, cuentas, progreso y dibujo
+(function () {
+  'use strict';
+  const CFG = window.MOTO_CONFIG || {};
+  const Sim = window.MotoSim;
+  const DT = Sim.DT;
+  const $ = (id) => document.getElementById(id);
+
+  /* ================= DATOS ================= */
+  const BIKES = [
+    { id: 'starter', name: 'Scooter Roja', price: 0, minLevel: 1, speed: 1.0, control: 1.0, color: '#e63946', accent: '#ffd166' },
+    { id: 'trail', name: 'Trail Verde', price: 250, minLevel: 3, speed: 1.06, control: 1.1, color: '#2a9d8f', accent: '#e9ff70' },
+    { id: 'sport', name: 'Sport Azul', price: 700, minLevel: 6, speed: 1.12, control: 1.15, color: '#3a86ff', accent: '#ffffff' },
+    { id: 'ghost', name: 'Fantasma Neón', price: 1500, minLevel: 10, speed: 1.18, control: 1.25, color: '#b5179e', accent: '#4cc9f0' }
+  ];
+  const THEMES = [
+    { name: 'Día', sky: ['#4facfe', '#cdeeff'], mount: ['#7ea3c9', '#5f86ad'], dirt: '#7a4b2a', grass: '#4caf50', sun: '#fff3b0' },
+    { name: 'Atardecer', sky: ['#ff7e5f', '#feb47b'], mount: ['#b0587a', '#8e4a6b'], dirt: '#5a3320', grass: '#9ccc3c', sun: '#fff1c9' },
+    { name: 'Noche', sky: ['#0b1026', '#2a3a7a'], mount: ['#27346b', '#1b2550'], dirt: '#2b2b3a', grass: '#3fa7a0', sun: '#e8eeff', stars: true },
+    { name: 'Desierto', sky: ['#ffd27a', '#fff0c9'], mount: ['#e0b070', '#d19a56'], dirt: '#c28a47', grass: '#e6c36a', sun: '#ffffff' },
+    { name: 'Neón', sky: ['#12002b', '#5b0f91'], mount: ['#3b0f73', '#2b0a55'], dirt: '#1a0b33', grass: '#ff2bd6', sun: '#7cf7ff', stars: true }
+  ];
+  const RANKS = [[1, 'Novato'], [3, 'Aprendiz'], [6, 'Piloto'], [10, 'Experto'], [15, 'Maestro'], [22, 'Leyenda']];
+  const CAUSES = { roca: 'Chocaste con un obstáculo', aterrizaje: 'Mal aterrizaje', abismo: 'Caíste al abismo', pared: 'Chocaste de frente', tiempo: 'Se acabó el tiempo' };
+
+  const levelOf = (xp) => Math.floor(Math.sqrt(xp / 60)) + 1;
+  const xpAt = (l) => 60 * (l - 1) * (l - 1);
+  const rankOf = (l) => { let r = RANKS[0][1]; for (const [lv, n] of RANKS) if (l >= lv) r = n; return r; };
+  const themeFor = (n) => THEMES[Math.floor((n - 1) / 3) % THEMES.length];
+  const bikeById = (id) => BIKES.find((b) => b.id === id) || BIKES[0];
+  const defaultProfile = () => ({ xp: 0, coins: 0, stage: 1, wins: 0, bikes: ['starter'], bike: 'starter', streak: 0, daily_last: null });
+  const todayStr = () => new Date().toLocaleDateString('en-CA');
+  const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toLocaleDateString('en-CA'); };
+
+  /* ================= BACKENDS ================= */
+  const LocalBackend = {
+    mode: 'local',
+    _db() { try { return JSON.parse(localStorage.getItem('mr_db') || '{}'); } catch (e) { return {}; } },
+    _save(db) { localStorage.setItem('mr_db', JSON.stringify(db)); },
+    async session() { const e = localStorage.getItem('mr_session'); return e && this._db()[e] ? { email: e } : null; },
+    async signUp(email, pass, username) {
+      const db = this._db();
+      if (db[email]) throw new Error('Ese correo ya tiene cuenta');
+      if (Object.values(db).some((a) => a.profile.username.toLowerCase() === username.toLowerCase())) throw new Error('Ese nombre ya existe');
+      db[email] = { pass, profile: Object.assign({ username }, defaultProfile()) };
+      this._save(db); localStorage.setItem('mr_session', email); return { email };
+    },
+    async signIn(email, pass) {
+      const a = this._db()[email];
+      if (!a || a.pass !== pass) throw new Error('Correo o contraseña incorrectos');
+      localStorage.setItem('mr_session', email); return { email };
+    },
+    async signOut() { localStorage.removeItem('mr_session'); },
+    async loadProfile(u) { return this._db()[u.email].profile; },
+    async saveProfile(u, p) { const db = this._db(); db[u.email].profile = p; this._save(db); },
+    async leaderboard() {
+      const rivals = [['Rayo_77', 5200, 14], ['TurboAna', 3100, 11], ['Dakar_Pro', 1900, 9], ['LuchoMX', 900, 6], ['Nova', 420, 4], ['Pedalin', 120, 2]]
+        .map(([username, xp, stage]) => ({ username, xp, stage, rival: true }));
+      const mine = Object.values(this._db()).map((a) => ({ username: a.profile.username, xp: a.profile.xp, stage: a.profile.stage }));
+      return rivals.concat(mine).sort((a, b) => b.xp - a.xp);
+    }
+  };
+
+  function SupaBackend(url, key) {
+    const sb = window.supabase.createClient(url, key);
+    return {
+      mode: 'online',
+      async session() { const { data } = await sb.auth.getSession(); return data.session ? { id: data.session.user.id } : null; },
+      async signUp(email, pass, username) {
+        const esc = username.replace(/[\\%_]/g, (c) => '\\' + c);
+        const { data: ex } = await sb.from('profiles').select('id').ilike('username', esc).limit(1);
+        if (ex && ex.length) throw new Error('Ese nombre ya existe');
+        const { data, error } = await sb.auth.signUp({ email, password: pass });
+        if (error) throw error;
+        if (!data.session) throw new Error('Confirma tu correo para entrar (o desactiva "Confirm email" en Supabase)');
+        const row = Object.assign({ id: data.user.id, username }, defaultProfile());
+        const { error: e2 } = await sb.from('profiles').insert(row);
+        if (e2) throw e2;
+        return { id: data.user.id };
+      },
+      async signIn(email, pass) {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw new Error(/invalid/i.test(error.message) ? 'Correo o contraseña incorrectos' : error.message);
+        return { id: data.user.id };
+      },
+      async signOut() { await sb.auth.signOut(); },
+      async loadProfile(u) {
+        const { data, error } = await sb.from('profiles').select('*').eq('id', u.id).single();
+        if (error) throw error; return data;
+      },
+      async saveProfile(u, p) {
+        const { id, username, updated_at, ...rest } = p;
+        const { error } = await sb.from('profiles').update(Object.assign({}, rest, { updated_at: new Date().toISOString() })).eq('id', u.id);
+        if (error) throw error;
+      },
+      async leaderboard() {
+        const { data, error } = await sb.from('profiles').select('username,xp,stage').order('xp', { ascending: false }).limit(50);
+        if (error) throw error; return data;
+      }
+    };
+  }
+
+  /* ================= ESTADO ================= */
+  let backend, user = null, profile = null, game = null, signupMode = false, justSignedUp = false;
+  const input = { back: false, fwd: false, jump: false };
+
+  async function persist() {
+    try { await backend.saveProfile(user, profile); } catch (e) { toast('No se pudo guardar online: ' + (e.message || e)); }
+  }
+
+  /* ================= UI BÁSICA ================= */
+  function show(id) { document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id)); }
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2800); }
+  function closeModal() { $('modal').classList.remove('on'); }
+  function modal(html, buttons) {
+    $('modalBody').innerHTML = html;
+    const box = $('modalBtns'); box.innerHTML = '';
+    buttons.forEach((b) => {
+      const el = document.createElement('button');
+      el.className = 'btn ' + (b.cls || ''); el.textContent = b.text;
+      el.onclick = () => { closeModal(); if (b.fn) b.fn(); };
+      box.appendChild(el);
+    });
+    $('modal').classList.add('on');
+  }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ================= AUTH ================= */
+  function setSignup(on) {
+    signupMode = on;
+    $('tabLogin').classList.toggle('on', !on); $('tabSignup').classList.toggle('on', on);
+    $('inUser').classList.toggle('hidden', !on);
+    $('btnAuth').textContent = on ? 'Crear cuenta y recibir moto' : 'Entrar';
+    $('authErr').textContent = '';
+  }
+  $('tabLogin').onclick = () => setSignup(false);
+  $('tabSignup').onclick = () => setSignup(true);
+  $('btnAuth').onclick = async () => {
+    const email = $('inEmail').value.trim().toLowerCase(), pass = $('inPass').value, name = $('inUser').value.trim();
+    const err = $('authErr'); err.textContent = '';
+    if (!/^\S+@\S+\.\S+$/.test(email)) return (err.textContent = 'Escribe un correo válido');
+    if (pass.length < 6) return (err.textContent = 'La contraseña debe tener al menos 6 caracteres');
+    if (signupMode && !/^[A-Za-z0-9_]{3,16}$/.test(name)) return (err.textContent = 'Nombre: 3-16 letras, números o _');
+    $('btnAuth').classList.add('disabled');
+    try {
+      user = signupMode ? await backend.signUp(email, pass, name) : await backend.signIn(email, pass);
+      profile = await backend.loadProfile(user);
+      justSignedUp = signupMode;
+      toLobby();
+    } catch (e) { err.textContent = e.message || String(e); }
+    $('btnAuth').classList.remove('disabled');
+  };
+  $('btnLogout').onclick = async () => { await backend.signOut(); user = profile = null; show('scrAuth'); };
+
+  /* ================= LOBBY / PROGRESO ================= */
+  function toLobby() {
+    game = null;
+    $('hud').classList.add('hidden'); $('controls').classList.add('hidden');
+    renderLobby(); show('scrLobby');
+    if (justSignedUp) {
+      justSignedUp = false;
+      modal('<h3>¡Bienvenido, ' + esc(profile.username) + '!</h3><p>Te regalamos tu primera moto:</p><p class="hl">🏍️ Scooter Roja</p><p>Gana pistas para subir de rango, ganar monedas y desbloquear motos más veloces.</p>', [{ text: '¡A rodar!', cls: 'primary' }]);
+    }
+  }
+  function dailyReady() { return profile.daily_last !== todayStr(); }
+  function renderLobby() {
+    const lv = levelOf(profile.xp), a = xpAt(lv), b = xpAt(lv + 1);
+    $('lbName').textContent = profile.username;
+    $('lbRank').textContent = rankOf(lv); $('lbLevel').textContent = 'Nv ' + lv;
+    $('lbCoins').textContent = profile.coins;
+    $('lbXp').style.width = Math.min(100, ((profile.xp - a) / (b - a)) * 100) + '%';
+    $('lbXpTxt').textContent = (profile.xp - a) + ' / ' + (b - a) + ' XP';
+    const T = Sim.buildTrack(profile.stage);
+    $('btnPlayInfo').textContent = 'Pista ' + profile.stage + ' · ' + T.time + ' s';
+    $('btnDaily').classList.toggle('hidden', !dailyReady());
+  }
+  $('btnDaily').onclick = async () => {
+    if (!dailyReady()) return;
+    profile.streak = profile.daily_last === yesterdayStr() ? profile.streak + 1 : 1;
+    const reward = 40 + 20 * Math.min(profile.streak, 7);
+    profile.coins += reward; profile.daily_last = todayStr();
+    await persist(); renderLobby();
+    modal('<h3>🎁 Recompensa diaria</h3><p class="hl">+' + reward + ' monedas</p><p>Racha: ' + profile.streak + ' día(s). ¡Vuelve mañana por más!</p>', [{ text: 'Genial', cls: 'primary' }]);
+  };
+  $('btnPlay').onclick = startRun;
+  $('btnRank').onclick = openRank;
+  $('btnGarage').onclick = openGarage;
+  document.querySelectorAll('[data-back]').forEach((b) => (b.onclick = toLobby));
+
+  /* ---- Ranking ---- */
+  async function openRank() {
+    show('scrRank');
+    const list = $('rankList'); list.innerHTML = '<p style="text-align:center;opacity:.7">Cargando…</p>';
+    $('rankNote').textContent = backend.mode === 'local' ? 'Modo local: el ranking solo incluye tu dispositivo y pilotos de ejemplo. Conecta Supabase (README) para el ranking online real.' : 'Ranking online · Top 50 por experiencia';
+    try {
+      const rows = await backend.leaderboard();
+      list.innerHTML = '';
+      rows.forEach((r, i) => {
+        const lv = levelOf(r.xp), el = document.createElement('div');
+        el.className = 'rrow' + (r.username === profile.username ? ' me' : '');
+        el.innerHTML = '<div class="pos">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</div><div class="rn"><b>' + esc(r.username) + '</b><small>' + rankOf(lv) + ' · Nv ' + lv + ' · Pista ' + r.stage + '</small></div><div class="rxp">' + r.xp + ' XP</div>';
+        list.appendChild(el);
+      });
+    } catch (e) { list.innerHTML = '<p style="text-align:center">No se pudo cargar: ' + esc(e.message || e) + '</p>'; }
+  }
+
+  /* ---- Garaje ---- */
+  function openGarage() { renderGarage(); show('scrGarage'); }
+  function renderGarage() {
+    $('gaCoins').textContent = profile.coins;
+    const lv = levelOf(profile.xp), list = $('garageList'); list.innerHTML = '';
+    BIKES.forEach((b) => {
+      const owned = profile.bikes.includes(b.id), selected = profile.bike === b.id;
+      const card = document.createElement('div'); card.className = 'bcard' + (selected ? ' sel' : '');
+      const cv2 = document.createElement('canvas'); cv2.width = 220; cv2.height = 128; card.appendChild(cv2);
+      const g2 = cv2.getContext('2d'); g2.translate(110, 105); drawBike(g2, 0, 0, 0, 0.6, b, 1.5);
+      const info = document.createElement('div'); info.className = 'binfo';
+      info.innerHTML = '<b>' + b.name + '</b><small>Velocidad ' + Math.round(b.speed * 100) + '% · Control ' + Math.round(b.control * 100) + '%</small>';
+      const btn = document.createElement('button'); btn.className = 'btn';
+      if (selected) { btn.textContent = 'En uso'; btn.classList.add('disabled'); }
+      else if (owned) { btn.textContent = 'Usar'; btn.onclick = async () => { profile.bike = b.id; await persist(); renderGarage(); }; }
+      else if (lv < b.minLevel) { btn.textContent = '🔒 Nv ' + b.minLevel; btn.classList.add('disabled'); }
+      else {
+        btn.textContent = '🪙 ' + b.price; btn.classList.add('gold');
+        btn.onclick = async () => {
+          if (profile.coins < b.price) return toast('Te faltan ' + (b.price - profile.coins) + ' monedas');
+          profile.coins -= b.price; profile.bikes.push(b.id); profile.bike = b.id;
+          await persist(); renderGarage(); toast('¡Nueva moto: ' + b.name + '!');
+        };
+      }
+      card.appendChild(info); card.appendChild(btn); list.appendChild(card);
+    });
+  }
+
+  /* ================= JUEGO ================= */
+  function startRun() {
+    const n = profile.stage, track = Sim.buildTrack(n), bk = bikeById(profile.bike);
+    const bike = new Sim.Bike(track, { speed: bk.speed, control: bk.control });
+    game = { n, track, bike, bk, theme: themeFor(n), phase: 'count', count: 3.4, paused: false, camX: 0, camY: -300, acc: 0, flipsSeen: 0, msgT: 0, endT: 0, shown: false };
+    show('none'); document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+    $('hud').classList.remove('hidden'); $('controls').classList.remove('hidden');
+    $('hudStage').textContent = 'Pista ' + n; $('hudCoins').textContent = '🪙 0'; $('hudProg').style.width = '0';
+    input.back = input.fwd = input.jump = false;
+  }
+  function say(text, t) { const m = $('hudMsg'); m.textContent = text; m.classList.add('on'); game.msgT = t; }
+
+  function updateGame(dt) {
+    const g = game; if (!g || g.paused) return;
+    const b = g.bike;
+    if (g.msgT > 0) { g.msgT -= dt; if (g.msgT <= 0) $('hudMsg').classList.remove('on'); }
+    if (g.phase === 'count') {
+      g.count -= dt;
+      if (g.count <= 0.4 && g.count > 0) { if ($('hudMsg').textContent !== '¡YA!') say('¡YA!', 0.9); }
+      else if (g.count > 0.4) { const n = Math.ceil(g.count - 0.4); if ($('hudMsg').textContent !== String(n)) say(String(n), 1.2); }
+      if (g.count <= 0) { g.phase = 'run'; b.state = 'run'; }
+      return;
+    }
+    if (g.phase === 'run') {
+      g.acc += dt; let k = 0;
+      while (g.acc >= DT && k < 8) { b.step(DT, input); g.acc -= DT; k++; if (b.state !== 'run') break; }
+      if (k >= 8) g.acc = 0;
+      const left = Math.max(0, Math.ceil(g.track.time - b.t));
+      $('hudTime').textContent = left; $('hudTime').classList.toggle('warn', left <= 5);
+      $('hudCoins').textContent = '🪙 ' + b.coins;
+      $('hudProg').style.width = Math.min(100, (b.x / g.track.finishX) * 100) + '%';
+      if (b.flips > g.flipsSeen) { g.flipsSeen = b.flips; say('¡MORTAL!', 1); }
+      if (b.state !== 'run') {
+        g.phase = 'end'; g.endT = 0;
+        if (b.state === 'crashed' && navigator.vibrate) navigator.vibrate(180);
+      }
+    } else if (g.phase === 'end') {
+      g.endT += dt;
+      if (g.endT > 0.9 && !g.shown) { g.shown = true; endRun(); }
+    }
+  }
+
+  async function endRun() {
+    const g = game, b = g.bike, n = g.n, won = b.state === 'won';
+    const timeLeft = Math.max(0, Math.round(g.track.time - b.t));
+    let xp, coins;
+    if (won) {
+      xp = 40 + n * 12 + timeLeft * 3 + b.flips * 20;
+      coins = b.coins + 10 + n * 3 + b.flips * 15;
+      profile.stage = Math.max(profile.stage, n + 1); profile.wins++;
+    } else {
+      xp = Math.round(5 + Math.min(1, b.x / g.track.finishX) * 25); coins = b.coins;
+    }
+    const oldL = levelOf(profile.xp); profile.xp += xp; const newL = levelOf(profile.xp);
+    let bonus = 0; for (let l = oldL + 1; l <= newL; l++) bonus += 100 * l;
+    profile.coins += coins + bonus;
+    await persist();
+
+    let html = '<h3>' + (won ? '🏁 ¡Pista ' + n + ' superada!' : '💥 ' + (CAUSES[b.cause] || 'Chocaste')) + '</h3>';
+    if (won) html += '<div class="rw"><span>Tiempo restante</span><b>' + timeLeft + ' s</b></div>';
+    html += '<div class="rw"><span>Monedas recogidas</span><b>🪙 ' + b.coins + '</b></div>';
+    if (b.flips) html += '<div class="rw"><span>Mortales</span><b>' + b.flips + '</b></div>';
+    html += '<div class="rw"><span>Experiencia</span><b class="hl">+' + xp + ' XP</b></div>';
+    if (won) html += '<div class="rw"><span>Premio de pista</span><b>🪙 +' + (10 + n * 3 + b.flips * 15) + '</b></div>';
+    if (newL > oldL) {
+      html += '<p class="hl">⬆️ ¡Subiste al nivel ' + newL + '! Bono 🪙 +' + bonus + '</p>';
+      if (rankOf(newL) !== rankOf(oldL)) html += '<p class="hl">🏅 Nuevo rango: ' + rankOf(newL) + '</p>';
+      const unlocked = BIKES.filter((k) => k.minLevel > oldL && k.minLevel <= newL);
+      if (unlocked.length) html += '<p>🔓 Moto disponible en el garaje: ' + unlocked.map((k) => k.name).join(', ') + '</p>';
+    }
+    if (won) html += '<p>Siguiente: pista ' + profile.stage + ' (más larga, más rápida y más difícil)</p>';
+    const btns = won ? [{ text: 'Siguiente pista', cls: 'primary', fn: startRun }, { text: 'Lobby', fn: toLobby }]
+                     : [{ text: 'Reintentar', cls: 'primary', fn: startRun }, { text: 'Lobby', fn: toLobby }];
+    modal(html, btns);
+  }
+
+  $('btnPause').onclick = () => {
+    if (!game || game.phase === 'end') return;
+    game.paused = true;
+    modal('<h3>Pausa</h3>', [{ text: 'Continuar', cls: 'primary', fn: () => { if (game) game.paused = false; } }, { text: 'Salir al lobby', fn: toLobby }]);
+  };
+  document.addEventListener('visibilitychange', () => { if (document.hidden && game && game.phase === 'run' && !game.paused) $('btnPause').onclick(); });
+
+  /* ---- controles ---- */
+  function bindBtn(id, key) {
+    const el = $(id);
+    const on = (e) => { e.preventDefault(); input[key] = true; el.classList.add('down'); };
+    const off = (e) => { e.preventDefault(); input[key] = false; el.classList.remove('down'); };
+    el.addEventListener('pointerdown', on);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => el.addEventListener(t, off));
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+  bindBtn('bBack', 'back'); bindBtn('bFwd', 'fwd'); bindBtn('bJump', 'jump');
+  const KEYS = { ArrowLeft: 'back', a: 'back', A: 'back', ArrowRight: 'fwd', d: 'fwd', D: 'fwd', ' ': 'jump', ArrowUp: 'jump', w: 'jump', W: 'jump' };
+  window.addEventListener('keydown', (e) => { if (KEYS[e.key] && game) { input[KEYS[e.key]] = true; e.preventDefault(); } });
+  window.addEventListener('keyup', (e) => { if (KEYS[e.key]) input[KEYS[e.key]] = false; });
+
+  /* ================= DIBUJO ================= */
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, S = 1;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.width = Math.round(innerWidth * dpr); H = cv.height = Math.round(innerHeight * dpr);
+    S = Math.min(H / 380, W / 560);
+  }
+  window.addEventListener('resize', resize); resize();
+
+  function drawBike(g, x, y, ang, wheel, bk, scale) {
+    g.save(); g.translate(x, y); g.rotate(ang); g.scale(scale || 1, scale || 1);
+    const wheelAt = (cx) => {
+      g.save(); g.translate(cx, -13); g.rotate(wheel);
+      g.fillStyle = '#16161d'; g.beginPath(); g.arc(0, 0, 13, 0, 7); g.fill();
+      g.fillStyle = '#c9ced6'; g.beginPath(); g.arc(0, 0, 7, 0, 7); g.fill();
+      g.strokeStyle = '#16161d'; g.lineWidth = 2; g.beginPath(); g.moveTo(-6, 0); g.lineTo(6, 0); g.moveTo(0, -6); g.lineTo(0, 6); g.stroke();
+      g.restore();
+    };
+    wheelAt(-22); wheelAt(22);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    g.strokeStyle = '#2b2d36'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(-6, -18); g.lineTo(-22, -13); g.moveTo(14, -30); g.lineTo(22, -13); g.moveTo(12, -34); g.lineTo(19, -38); g.stroke();
+    g.fillStyle = bk.color; g.beginPath();
+    g.moveTo(-18, -14); g.lineTo(-8, -33); g.lineTo(10, -34); g.lineTo(17, -22); g.lineTo(8, -13); g.closePath(); g.fill();
+    g.fillStyle = '#2b2d36'; g.fillRect(-24, -31, 18, 4);
+    g.strokeStyle = bk.accent; g.lineWidth = 7; g.beginPath(); g.moveTo(-2, -34); g.lineTo(4, -51); g.stroke();
+    g.lineWidth = 4; g.beginPath(); g.moveTo(4, -47); g.lineTo(15, -38); g.stroke();
+    g.fillStyle = bk.accent; g.beginPath(); g.arc(6, -58, 7, 0, 7); g.fill();
+    g.fillStyle = 'rgba(20,20,30,.85)'; g.fillRect(6, -61, 7, 4);
+    g.restore();
+  }
+
+  function layer(camX, speed, baseFrac, amp, wl, color) {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, H);
+    for (let px = 0; px <= W + 12; px += 12) {
+      const wx = px / S + camX * speed;
+      const y = H * baseFrac - (Math.sin(wx * 0.004 * wl) + Math.sin(wx * 0.011 * wl + 2) * 0.6) * amp * S;
+      ctx.lineTo(px, y);
+    }
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  }
+  function idxAt(pts, x) { let lo = 0, hi = pts.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m].x <= x) lo = m; else hi = m; } return lo; }
+
+  let menuT = 0, clock = 0;
+  function draw(dt) {
+    clock += dt;
+    const vw = W / S, vh = H / S;
+    const g0 = game;
+    const th = g0 ? g0.theme : themeFor(profile ? profile.stage : 1);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const grd = ctx.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, th.sky[0]); grd.addColorStop(1, th.sky[1]);
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+    if (th.stars) { ctx.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 70; i++) ctx.fillRect(((i * 977) % 1000) / 1000 * W, ((i * 613) % 600) / 1000 * H, 2, 2); }
+    ctx.fillStyle = th.sun; ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.arc(W * 0.8, H * 0.16, 34 * S, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+
+    let camX, camY, bx, by, bang, bwheel, bk, bscale = 1;
+    if (g0) {
+      const b = g0.bike; bk = g0.bk;
+      camX = b.x - vw * 0.3;
+      const targetY = b.y - vh * 0.62;
+      g0.camY += (targetY - g0.camY) * Math.min(1, dt * 4);
+      camY = g0.camY;
+      if (g0.phase === 'end' && g0.endT < 0.35 && b.state === 'crashed') { camX += (Math.random() - 0.5) * 10; camY += (Math.random() - 0.5) * 10; }
+      bx = b.x; by = b.y; bang = b.ang; bwheel = b.wheel;
+    } else {
+      menuT += dt; bk = bikeById(profile ? profile.bike : 'starter');
+      camX = menuT * 140; camY = -vh * 0.62;
+      bx = camX + vw * (W > H ? 0.27 : 0.5); by = 0; bang = 0; bwheel = menuT * 20; bscale = 1.9;
+    }
+    layer(camX, 0.15, 0.62, 38, 1, th.mount[0]);
+    layer(camX, 0.3, 0.72, 30, 1.7, th.mount[1]);
+
+    ctx.setTransform(S, 0, 0, S, -camX * S, -camY * S);
+    const bottom = camY + vh + 60, x0 = camX - 80, x1 = camX + vw + 80;
+    if (g0) {
+      const T = g0.track, pts = T.pts;
+      const i0 = Math.max(0, idxAt(pts, x0)), i1 = Math.min(pts.length - 1, idxAt(pts, x1) + 1);
+      ctx.fillStyle = th.dirt; ctx.beginPath(); ctx.moveTo(pts[i0].x, bottom);
+      for (let i = i0; i <= i1; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.lineTo(pts[i1].x, bottom); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = th.grass; ctx.lineWidth = 9; ctx.lineJoin = 'round'; ctx.beginPath();
+      for (let i = i0; i <= i1; i++) { if (i === i0) ctx.moveTo(pts[i].x, pts[i].y); else ctx.lineTo(pts[i].x, pts[i].y); }
+      ctx.stroke();
+      // línea de meta
+      const fx = T.finishX;
+      if (fx > x0 && fx < x1) {
+        ctx.fillStyle = '#fff'; ctx.fillRect(fx - 3, -150, 6, 150);
+        for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) { ctx.fillStyle = (r + c) % 2 ? '#111' : '#fff'; ctx.fillRect(fx + c * 10, -150 + r * 10, 10, 10); }
+        ctx.fillStyle = 'rgba(255,255,255,.25)'; for (let k = 0; k < 8; k++) { ctx.fillStyle = k % 2 ? '#111' : '#fff'; ctx.fillRect(fx - 30 + k * 8, -2, 8, 4); }
+      }
+      for (const r of T.rocks) {
+        if (r.x < x0 || r.x > x1) continue;
+        const gy = T.groundY(r.x);
+        if (r.type === 'log') {
+          ctx.fillStyle = '#8b5a2b'; ctx.fillRect(r.x - r.w / 2, gy - r.h, r.w, r.h);
+          ctx.fillStyle = '#c28a4b'; ctx.beginPath(); ctx.ellipse(r.x - r.w / 2, gy - r.h / 2, 6, r.h / 2, 0, 0, 7); ctx.fill();
+        } else {
+          ctx.fillStyle = '#7d8590'; ctx.beginPath(); ctx.moveTo(r.x - r.w / 2, gy); ctx.lineTo(r.x - r.w * 0.3, gy - r.h * 0.85); ctx.lineTo(r.x, gy - r.h); ctx.lineTo(r.x + r.w * 0.35, gy - r.h * 0.7); ctx.lineTo(r.x + r.w / 2, gy); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.beginPath(); ctx.moveTo(r.x - r.w * 0.3, gy - r.h * 0.85); ctx.lineTo(r.x, gy - r.h); ctx.lineTo(r.x - r.w * 0.05, gy - r.h * 0.5); ctx.closePath(); ctx.fill();
+        }
+      }
+      for (const c of T.coins) {
+        if (c.taken || c.x < x0 || c.x > x1) continue;
+        const sx = Math.abs(Math.cos(clock * 5 + c.x * 0.05));
+        ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(c.x, c.y, 9 * Math.max(0.25, sx), 9, 0, 0, 7); ctx.fill(); ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = th.dirt; ctx.fillRect(x0, 0, x1 - x0, bottom);
+      ctx.fillStyle = th.grass; ctx.fillRect(x0, -4, x1 - x0, 8);
+    }
+    drawBike(ctx, bx, by, bang, bwheel, bk, bscale);
+    if (g0 && g0.bike.state === 'crashed' && g0.endT < 0.4) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(255,40,40,' + (0.35 * (1 - g0.endT / 0.4)) + ')'; ctx.fillRect(0, 0, W, H); }
+  }
+
+  /* ================= BUCLE ================= */
+  let last = 0;
+  function frame(ts) {
+    const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts;
+    if (game) updateGame(dt);
+    try { draw(dt); } catch (e) { console.error(e); }
+    requestAnimationFrame(frame);
+  }
+
+  /* ================= ARRANQUE ================= */
+  async function boot() {
+    const online = CFG.SUPABASE_URL && CFG.SUPABASE_KEY && window.supabase;
+    backend = online ? SupaBackend(CFG.SUPABASE_URL, CFG.SUPABASE_KEY) : LocalBackend;
+    $('modeBadge').textContent = online ? '🟢 Cuentas y ranking online' : '🟡 Modo local (sin servidor): conecta Supabase para cuentas y ranking online';
+    show('scrAuth');
+    requestAnimationFrame(frame);
+    try {
+      user = await backend.session();
+      if (user) { profile = await backend.loadProfile(user); toLobby(); }
+    } catch (e) { user = null; }
+  }
+  boot();
+})();
+
+</script>
+</body>
+</html>
